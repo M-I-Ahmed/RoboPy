@@ -24,10 +24,26 @@ class Robot(ABC):
     def joint_position (self, arm: str = None) -> list[float]:
         raise NotImplementedError("This method should be implemented by any subclasses")
 
+    # Connection Methods #
     @abstractmethod
     def connect(self) -> tuple[Literal[0,1],str]:
         raise NotImplementedError("This method should be implemented by any subclasses")
-    
+
+    @abstractmethod
+    def disconnect(self) -> tuple[Literal[0,1],str]:
+        raise NotImplementedError("This method should be implemented by any subclasses")
+
+    # Movement Methods # 
+    def move_joint(
+        self,
+        position: list[Joints],
+        speed: int = None
+    ) -> tuple[Literal[0,1],str]:
+        raise NotImplementedError("This method should be implemented by any subclasses")
+
+    #def move_pose
+
+
 
 
 
