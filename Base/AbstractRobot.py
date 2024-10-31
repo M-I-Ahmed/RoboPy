@@ -36,12 +36,22 @@ class Robot(ABC):
     # Movement Methods # 
     def move_joint(
         self,
-        position: list[Joints],
-        speed: int = None
+        position: list[float],
+        arm: str = None,
+        velocity: int = None, 
     ) -> tuple[Literal[0,1],str]:
         raise NotImplementedError("This method should be implemented by any subclasses")
 
-    #def move_pose
+    def move_pose(
+        self,
+        position: list[float],
+        velocity: int,
+        linear: bool,
+        arm: str = None,
+    ) -> tuple[Literal[0,1],str]:
+        raise NotImplementedError("This method should be implemented by any subclasses")
+
+    # Program Control # 
 
 
 
