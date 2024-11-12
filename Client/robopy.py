@@ -1,7 +1,6 @@
 # Client/robopy.py
 
-from Core.factory import RobotHandlerFactory
-from Core.command_dispatcher import CommandDispatcher
+from Core import RobotHandlerFactory, CommandDispatcher
 
 class RoboPy:
     def __init__(self, robot_type: str, host: str, port: int = 18735, **kwargs):

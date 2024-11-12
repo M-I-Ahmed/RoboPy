@@ -20,14 +20,19 @@ class Robot(ABC):
     @abstractmethod
     def connect(self) -> tuple[Literal[0,1],str]:
         raise NotImplementedError("The method, 'connect', should be implemented by any subclasses")
-
+    
+    @abstractmethod
+    def handle_response(
+        self, resp: str, continue_on_error: bool = False) -> tuple[Literal[0, 1], str]:
+        raise NotImplementedError("The method, 'disconnect', should be implemented by any subclasses")    
+      
     @abstractmethod
     def disconnect(self) -> tuple[Literal[0,1],str]:
         raise NotImplementedError("The method, 'disconnect', should be implemented by any subclasses")    
     
     ### Methods ###
     @abstractmethod
-    def cur_cart_position(self, arm: str = None) -> list[float]:
+    def tcp_position(self, arm: str = None) -> list[float]:
         raise NotImplementedError("The method, 'tcp_position', should be implemented by any subclasses")
     
     @abstractmethod

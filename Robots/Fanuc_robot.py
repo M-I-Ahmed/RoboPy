@@ -2,13 +2,13 @@
 import socket
 from typing import Optional, Literal
 from Base.AbstractRobot import Robot
-from Utils.helpers import FanucError, handle_response
+from Utils import FanucError, handle_response
 
 class Fanuc_robot(Robot):
     success_code = 0
     error_code = 1
 
-    def __init__(self, host: str, port: int = 18735, socket_timeout: int = 60): 
+    def __init__(self, host: str, port: int = 18736, socket_timeout: int = 60): 
         self.host = host
         self.port = port
         self.sock_buff_sz = 1024
@@ -24,17 +24,50 @@ class Fanuc_robot(Robot):
     def robot_model(self) -> str:
         return "Fanuc"
 
+    def handle_response(
+        self, resp: str, continue_on_error: bool = False
+    ) -> tuple[Literal[0, 1], str]:
+        """Handles response from socket communication.
+
+        Args:
+            resp (str): Response string returned from socket.
+            verbose (bool, optional): [description]. Defaults to False.
+
+        Returns:
+            tuple(int, str): Response code and response message.
+        """
+        code_, msg = resp.split(":")
+        code = int(code_)
+
+        # Catch possible errors
+        if code == self.error_code and not continue_on_error:
+            raise FanucError(msg)
+        if code not in (self.success_code, self.error_code):
+            raise FanucError(f"Unknown response code: {code} and message: {msg}")
+
+        return code, msg  # type: ignore[return-value]
+    
+    # def connect(self) -> tuple[Literal[0, 1], str]:
+    #     """Establishes a connection to the Fanuc robot."""
+    #     try:
+    #         self.comm_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #         self.comm_sock.settimeout(self.socket_timeout)
+    #         self.comm_sock.connect((self.host, self.port))
+    #         self._connected = True
+    #         return 0, f"Connected to Fanuc robot at {self.host}:{self.port}"
+    #     except socket.error as e:
+    #         self._connected = False
+    #         return 1, f"Failed to connect to Fanuc robot. Error: {str(e)}"
+
     def connect(self) -> tuple[Literal[0, 1], str]:
-        """Establishes a connection to the Fanuc robot."""
-        try:
-            self.comm_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.comm_sock.settimeout(self.socket_timeout)
-            self.comm_sock.connect((self.host, self.port))
-            self._connected = True
-            return 0, f"Connected to Fanuc robot at {self.host}:{self.port}"
-        except socket.error as e:
-            self._connected = False
-            return 1, f"Failed to connect to Fanuc robot. Error: {str(e)}"
+        """Connects to the physical robot."""
+        self.comm_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.comm_sock.settimeout(self.socket_timeout)
+        self.comm_sock.connect((self.host, self.port))
+        resp = self.comm_sock.recv(self.sock_buff_sz).decode()
+        print(resp)
+        self._connected = True
+        return self.handle_response(resp)
 
     def disconnect(self) -> tuple[Literal[0, 1], str]:
         """Closes the connection to the Fanuc robot."""
@@ -61,18 +94,41 @@ class Fanuc_robot(Robot):
 
         try:
             # Send command
+            print("Sending Command" + cmd)
+            cmd = cmd.strip() + "\n"
             self.comm_sock.sendall(cmd.encode())
+            print("cmd sent")
             # Receive and handle response
             raw_response = self.comm_sock.recv(self.sock_buff_sz).decode()
+            print(raw_response)
             return handle_response(raw_response, self.success_code, self.error_code, continue_on_error)
         except socket.error as e:
             return 1, f"Communication error with the Fanuc robot: {str(e)}"
 
-    def cur_cart_position(self, arm: str = None) -> list[float]:
+    # def tcp_position(self, arm: str = None) -> list[float]:
+    #     """Retrieves the current Cartesian position of the robot."""
+    #     cmd = "curpos"
+    #     _, msg = self.send_cmd(cmd)
+    #     vals = [float(val.split("=")[1]) for val in msg.split(",")]
+    #     return vals
+
+    def tcp_position(self, arm: str = None) -> list[float]:
         """Retrieves the current Cartesian position of the robot."""
-        cmd = "curpos"
-        _, msg = self.send_cmd(cmd)
-        vals = [float(val.split("=")[1]) for val in msg.split(",")]
+        # Send the position retrieval command
+        cmd = "curpos"  # Replace with the correct command if "curpos" is incorrect
+        print(cmd)
+        response_code, msg = self.send_cmd(cmd)
+        
+        # Debugging print to check the response format
+        print("Response from robot (msg):", msg)
+        
+        # Parse the response if it is in the expected "key=value" format
+        vals = []
+        if response_code == 0 and "=" in msg:
+            vals = [float(val.split("=")[1]) for val in msg.split(",") if "=" in val]
+        else:
+            print(f"Unexpected response format or message: {msg}")
+        
         return vals
 
     def cur_joint_position(self, arm: str = None) -> list[float]:
