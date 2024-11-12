@@ -1,5 +1,6 @@
 
-from .fanuc_robot import FanucRobot
-from .abb_yumi_robot import ABBYuMiRobot
+from .Fanuc_robot import Fanuc_robot
+#from .ABB_robot import ABBYuMiRobot
 
-__all__ = ["FanucRobot", "ABBYuMiRobot"]
+#__all__ = ["FanucRobot", "ABBYuMiRobot"]
+__all__ = ["FanucRobot"]

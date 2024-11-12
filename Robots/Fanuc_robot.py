@@ -1,20 +1,14 @@
+
 import socket
 from typing import Optional, Literal
 from Base.AbstractRobot import Robot
 from Utils.helpers import FanucError, handle_response
 
-
 class Fanuc_robot(Robot):
     success_code = 0
     error_code = 1
 
-    def __init__(
-        self,
-        host: str,
-        port: int = 18735,
-        socket_timeout: int = 60,
-        ): 
-
+    def __init__(self, host: str, port: int = 18735, socket_timeout: int = 60): 
         self.host = host
         self.port = port
         self.sock_buff_sz = 1024
@@ -29,22 +23,21 @@ class Fanuc_robot(Robot):
     @property
     def robot_model(self) -> str:
         return "Fanuc"
-        
 
     def connect(self) -> tuple[Literal[0, 1], str]:
+        """Establishes a connection to the Fanuc robot."""
         try:
             self.comm_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.comm_sock.settimeout(self.socket_timeout)
             self.comm_sock.connect((self.host, self.port))
             self._connected = True
-            resp = self.comm_sock.recv(self.sock_buff_sz).decode()
-            return self.handle_response(resp)
+            return 0, f"Connected to Fanuc robot at {self.host}:{self.port}"
         except socket.error as e:
             self._connected = False
-            resp = self.comm_sock.recv(self.sock_buff_sz).decode()
-            return self.handle_response(resp)
+            return 1, f"Failed to connect to Fanuc robot. Error: {str(e)}"
 
     def disconnect(self) -> tuple[Literal[0, 1], str]:
+        """Closes the connection to the Fanuc robot."""
         if self.comm_sock:
             self.comm_sock.close()
             self.comm_sock = None
@@ -53,30 +46,42 @@ class Fanuc_robot(Robot):
         else:
             return 1, "No connection to disconnect"
 
-    def _send_command(self, command: str) -> tuple[Literal[0, 1], str]:
-        """Send a command and handle the response using centralised response handling."""
+    def send_cmd(self, cmd: str, continue_on_error: bool = False) -> tuple[Literal[0, 1], str]:
+        """Sends a command to the robot and handles the response.
+
+        Args:
+            cmd (str): The command string to send to the robot.
+            continue_on_error (bool): Whether to continue on error.
+
+        Returns:
+            tuple: Response code and message.
+        """
         if not self._connected or not self.comm_sock:
             return 1, "Not connected to the Fanuc robot."
 
         try:
-            self.comm_sock.sendall(command.encode())
+            # Send command
+            self.comm_sock.sendall(cmd.encode())
+            # Receive and handle response
             raw_response = self.comm_sock.recv(self.sock_buff_sz).decode()
-            return handle_response(raw_response, self.SUCCESS_CODE, self.ERROR_CODE)
+            return handle_response(raw_response, self.success_code, self.error_code, continue_on_error)
         except socket.error as e:
             return 1, f"Communication error with the Fanuc robot: {str(e)}"
-        
+
     def cur_cart_position(self, arm: str = None) -> list[float]:
+        """Retrieves the current Cartesian position of the robot."""
         cmd = "curpos"
         _, msg = self.send_cmd(cmd)
         vals = [float(val.split("=")[1]) for val in msg.split(",")]
         return vals
-    
-    def cur_joint_position (self, arm: str = None) -> list[float]:
-        cmd =  "curjpos"
+
+    def cur_joint_position(self, arm: str = None) -> list[float]:
+        """Retrieves the current joint position of the robot."""
+        cmd = "curjpos"
         _, msg = self.send_cmd(cmd)
         vals = [float(val.split("=")[1]) for val in msg.split(",")]
         return vals
-    
+
     def move_joint(
         self,
         position: list[float],
@@ -86,42 +91,17 @@ class Fanuc_robot(Robot):
         linear: bool = False,
         continue_on_error: bool = False,
         arm: str = None,
-    ) -> tuple[Literal[0,1],str]:
+    ) -> tuple[Literal[0, 1], str]:
+        """Moves the robot to a specified joint position."""
+        velocity_ = f"{int(velocity):04}"
+        acceleration_ = f"{int(acceleration):04}"
+        cnt_val_ = f"{int(cnt_val):03}"
 
-        # prepare velocity. percentage or mm/s
-        # format: aaaa, e.g.: 0001%, 0020%, 3000 mm/s
-        velocity = int(velocity)
-        velocity_ = f"{velocity:04}"
-
-        # prepare acceleration. percentage or mm/s^2
-        # format: aaaa, e.g.: 0001%, 0020%, 0100 mm/s^2
-        acceleration = int(acceleration)
-        acceleration_ = f"{acceleration:04}"
-
-        # prepare CNT value
-        # format: aaa, e.g.: 001, 020, 100
-        cnt_val = int(cnt_val)
-        if not (0 <= cnt_val <= 100):
-            raise ValueError("Incorrect CNT value.")
-        cnt_val_ = f"{cnt_val:03}"
-
-        cmd = "movej"
-      
-        motion_type = int(linear)
-
-        cmd += f":{velocity_}:{acceleration_}:{cnt_val_}:{motion_type}:{len(position)}"
-
-        # prepare joint values
+        cmd = f"movej:{velocity_}:{acceleration_}:{cnt_val_}:{int(linear)}:{len(position)}"
         for val in position:
-            vs = f"{abs(val):013.6f}"
-            if val >= 0:
-                vs = "+" + vs
-            else:
-                vs = "-" + vs
-            cmd += f":{vs}"
+            cmd += f":{val:+013.6f}"
 
-        # call send_cmd
-        return self.send_cmd(cmd, continue_on_error=continue_on_error)        
+        return self.send_cmd(cmd, continue_on_error=continue_on_error)
 
     def move_pose(
         self,
@@ -132,88 +112,35 @@ class Fanuc_robot(Robot):
         linear: bool = False,
         continue_on_error: bool = False,
         arm: str = None,
-    ) -> tuple[Literal[0,1],str]:
-
-        # prepare velocity. percentage or mm/s
-        # format: aaaa, e.g.: 0001%, 0020%, 3000 mm/s
-        velocity = int(velocity)
-        velocity_ = f"{velocity:04}"
-
-        # prepare acceleration. percentage or mm/s^2
-        # format: aaaa, e.g.: 0001%, 0020%, 0100 mm/s^2
-        acceleration = int(acceleration)
-        acceleration_ = f"{acceleration:04}"
-
-        # prepare CNT value
-        # format: aaa, e.g.: 001, 020, 100
-        cnt_val = int(cnt_val)
-        if not (0 <= cnt_val <= 100):
-            raise ValueError("Incorrect CNT value.")
-        cnt_val_ = f"{cnt_val:03}"
-
-        cmd = "movep"
-      
-        motion_type = int(linear)
-
-        cmd += f":{velocity_}:{acceleration_}:{cnt_val_}:{motion_type}:{len(position)}"
-
-        # prepare joint values
-        for val in position:
-            vs = f"{abs(val):013.6f}"
-            if val >= 0:
-                vs = "+" + vs
-            else:
-                vs = "-" + vs
-            cmd += f":{vs}"
-
-        # call send_cmd
-        return self.send_cmd(cmd, continue_on_error=continue_on_error)        
-         
-    def gripper(
-        self,
-        value: bool,
-        continue_on_error: bool = False,
     ) -> tuple[Literal[0, 1], str]:
-        """Opens/closes robot gripper.
+        """Moves the robot to a specified Cartesian position."""
+        velocity_ = f"{int(velocity):04}"
+        acceleration_ = f"{int(acceleration):04}"
+        cnt_val_ = f"{int(cnt_val):03}"
 
-        Args:
-            value (bool): True or False
-        """
-        if (self.ee_DO_type is not None) and (self.ee_DO_num is not None):
-            cmd = ""
-            if self.ee_DO_type == "RDO":
-                cmd = "setrdo"
-                port = str(self.ee_DO_num)
-            elif self.ee_DO_type == "DO":
-                cmd = "setdout"
-                port = str(self.ee_DO_num).zfill(5)
-            else:
-                raise ValueError("Wrong DO type!")
+        cmd = f"movep:{velocity_}:{acceleration_}:{cnt_val_}:{int(linear)}:{len(position)}"
+        for val in position:
+            cmd += f":{val:+013.6f}"
 
-            cmd = cmd + f":{port}:{str(value).lower()}"
+        return self.send_cmd(cmd, continue_on_error=continue_on_error)
+    
+    def gripper(self, value: bool, continue_on_error: bool = False) -> tuple[Literal[0, 1], str]:
+        """Opens or closes the robot gripper."""
+        if self.ee_DO_type is not None and self.ee_DO_num is not None:
+            cmd = "setrdo" if self.ee_DO_type == "RDO" else "setdout"
+            port = str(self.ee_DO_num).zfill(5)
+            cmd = f"{cmd}:{port}:{str(value).lower()}"
             return self.send_cmd(cmd, continue_on_error=continue_on_error)
         else:
-            raise ValueError("DO type or number is None!")
+            return 1, "DO type or number is None!"
 
     def start_program(self, program_name: str) -> tuple[Literal[0, 1], str]:
-        """Calls external program name in a physical robot.
-
-        Args:
-            prog_name ([str]): External program name.
-        """
+        """Starts a specific program on the robot."""
         cmd = f"mappdkcall:{program_name}"
         return self.send_cmd(cmd)
 
     def get_dout(self, dout_num: int) -> int:
-        """Get DOUT value.
-
-        Args:
-            dout_num (int): DOUT number.
-
-        Returns:
-            dout_value: DOUT value.
-        """
+        """Retrieves the digital output (DOUT) value."""
         cmd = f"getdout:{str(dout_num).zfill(5)}"
         _, dout_value_ = self.send_cmd(cmd)
-        dout_value = int(dout_value_)
-        return dout_value
+        return int(dout_value_)
