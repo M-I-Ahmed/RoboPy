@@ -1,7 +1,7 @@
 
 import socket
 from typing import Optional, Literal
-from Base.AbstractRobot import Robot
+from Base import Robot
 from Utils import FanucError, handle_response
 
 class Fanuc_robot(Robot):

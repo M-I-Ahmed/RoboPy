@@ -4,6 +4,10 @@ class FanucError(Exception):
     """Exception for Fanuc robot communication errors."""
     pass
 
+class ABBError(Exception):
+    """Exception for ABB robot commuincation errors"""
+    pass
+
 def handle_response(
     resp: str,
     success_code: int = 0,

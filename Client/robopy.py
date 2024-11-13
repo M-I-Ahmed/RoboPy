@@ -1,4 +1,5 @@
 # Client/robopy.py
+# TO DO : Expand to cover more methods 
 
 from Core import RobotHandlerFactory, CommandDispatcher
 
@@ -13,14 +14,14 @@ class RoboPy:
             port (int): The port number for the robot controller. Defaults to 18735.
             **kwargs: Additional arguments passed to the robot instance (e.g., socket_timeout).
         """
-        # Use the factory to create the appropriate robot instance
+        # Use Core.factory to create the robot instance
         self.robot = RobotHandlerFactory.create_robot(robot_type, host=host, port=port, **kwargs)
         self.dispatcher = CommandDispatcher(self.robot)  # Dispatcher to handle command execution
 
     def connect(self):
         """Connects to the robot."""
         result = self.dispatcher.execute_command("connect")
-        print(result)  # Prints (0, "Connected to Fanuc robot at ...") or (1, "Failed to connect ...")
+        print(result)  # Prints message received from robot 
 
     def disconnect(self):
         """Disconnects from the robot."""
