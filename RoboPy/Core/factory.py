@@ -1,3 +1,8 @@
+# This script contains the method responsible for creating the robot instances as called in Client.robopy
+# To add additional robot OEMs
+
+
+
 from Robots import Fanuc_robot  # Importing exactly as defined
 #from Robots.ABB_robot import ABBRobot  # Assuming ABBRobot class is also defined in ABB_robot.py
 
