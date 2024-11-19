@@ -1,4 +1,4 @@
-### The is The abstract class definition for The robot object ###
+### The is The abstract class definition for the equipment types which in this case is the robot object ###
 ### The is The class that The robot specific classes will implement ### 
 from abc import ABC, abstractmethod
 from typing import Literal
