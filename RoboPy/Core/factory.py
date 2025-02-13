@@ -4,7 +4,7 @@
 
 
 from Robots import Fanuc_robot  # Importing exactly as defined
-#from Robots.ABB_robot import ABBRobot  # Assuming ABBRobot class is also defined in ABB_robot.py
+from Robots import ABB_YuMi  # Assuming ABBRobot class is also defined in ABB_robot.py
 
 class RobotHandlerFactory:
     @staticmethod
@@ -12,8 +12,8 @@ class RobotHandlerFactory:
         """Creates and returns an instance of the specified robot type."""
         if robot_type == "Fanuc":
             return Fanuc_robot(*args, **kwargs)  # Instantiate Fanuc_robot
-        #elif robot_type == "ABB":
-            #return ABBRobot(*args, **kwargs)  # Instantiate ABBRobot
+        elif robot_type == "ABB":
+            return ABB_YuMi(*args, **kwargs)  # Instantiate ABBRobot
         else:
             raise ValueError(f"Unsupported robot type: {robot_type}")
 
