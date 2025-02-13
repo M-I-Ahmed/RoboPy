@@ -10,8 +10,8 @@ class ABBError(Exception):
 
 def handle_response(
     resp: str,
-    success_code: int = 0,
-    error_code: int = 1,
+    success_code: int = 1,
+    error_code: int = 0,
     continue_on_error: bool = False
 ) -> tuple[Literal[0, 1], str]:
     """Handles response from robot communication.

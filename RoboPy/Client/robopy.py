@@ -33,7 +33,15 @@ class RoboPy:
         result = self.dispatcher.execute_command("move_joint", position, speed)
         print(result)  # Expected output: (0, "Joint move successful") or (1, "Error message")
 
-    def get_tcp_position(self):
+    def get_position(self):
         """Gets the current TCP position of the robot."""
         result = self.dispatcher.execute_command("tcp_position")
-        print("TCP Position:", result)  # Expected output: TCP position as a list or an error message
+        print("Position:", result)  # Expected output: TCP position as a list or an error message
+
+    def get_joint_pos(self):
+        result = self.dispatcher.execute_command("cur_joint_position")
+        print("Position", result)
+
+    def gripper(self):
+        result = self.dispatcher.execute_command("gripper")
+        print("Gripper", result)

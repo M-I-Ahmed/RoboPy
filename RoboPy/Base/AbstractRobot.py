@@ -39,32 +39,33 @@ class Robot(ABC):
     def cur_joint_position (self, arm: str = None) -> list[float]:
         raise NotImplementedError("The method, 'joint_position', should be implemented by any subclasses")
 
-
-
-    # Movement Methods # 
-    def move_joint(
-        self,
-        position: list[float],
-        arm: str = None,
-        velocity: int = None, 
-    ) -> tuple[Literal[0,1],str]:
-        raise NotImplementedError("The method, 'move_joint', should be implemented by any subclasses")
-
-    def move_pose(
-        self,
-        position: list[float],
-        velocity: int,
-        linear: bool,
-        arm: str = None,
-    ) -> tuple[Literal[0,1],str]:
-        raise NotImplementedError("The method, 'move_pose', should be implemented by any subclasses")
-
+    @abstractmethod
     def gripper(self, value: bool,)-> tuple[Literal[0,1],str]:
         raise NotImplementedError("The method, 'gripper', should be implemented by any subclasses")
 
-    # Program Control # 
-    def start_program(self, program_name: str = None,) -> tuple[Literal[0,1],str]:
-        raise NotImplementedError("The method, 'start_program', should be implemented by any subclasses")
+    # Movement Methods # 
+    # def move_joint(
+    #     self,
+    #     position: list[float],
+    #     arm: str = None,
+    #     velocity: int = None, 
+    # ) -> tuple[Literal[0,1],str]:
+    #     raise NotImplementedError("The method, 'move_joint', should be implemented by any subclasses")
+
+    # def move_pose(
+    #     self,
+    #     position: list[float],
+    #     velocity: int,
+    #     linear: bool,
+    #     arm: str = None,
+    # ) -> tuple[Literal[0,1],str]:
+    #     raise NotImplementedError("The method, 'move_pose', should be implemented by any subclasses")
+
+
+
+    # # Program Control # 
+    # def start_program(self, program_name: str = None,) -> tuple[Literal[0,1],str]:
+    #     raise NotImplementedError("The method, 'start_program', should be implemented by any subclasses")
 
     # def stop_program(self, program_name: str = None,) -> tuple[Literal[0,1],str]:
     #     raise NotImplementedError("The method, 'stop_program', should be implemented by any subclasses")
@@ -76,8 +77,8 @@ class Robot(ABC):
     # def get_Din(self, digital_input_index: int, value: bool )-> tuple[Literal[0,1],str]:
     #     raise NotImplementedError("The method, 'get_Din', should be implemented by any subclasses")
 
-    def get_Dout(self, digital_output_index: int, value: bool )-> tuple[Literal[0,1],str]:
-        raise NotImplementedError("The method, 'get_Dout', should be implemented by any subclasses")
+    # def get_Dout(self, digital_output_index: int, value: bool )-> tuple[Literal[0,1],str]:
+    #     raise NotImplementedError("The method, 'get_Dout', should be implemented by any subclasses")
 
     # def get_Ain(self, analog_input_index: int, value: bool )-> tuple[Literal[0,1],str]:
     #     raise NotImplementedError("The method, 'get_Ain', should be implemented by any subclasses")

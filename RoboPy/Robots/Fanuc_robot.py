@@ -135,7 +135,8 @@ class Fanuc_robot(Robot):
         """Retrieves the current joint position of the robot."""
         cmd = "curjpos"
         _, msg = self.send_cmd(cmd)
-        vals = [float(val.split("=")[1]) for val in msg.split(",")]
+        vals = []
+        vals = [float(val.split("=")[1]) for val in msg.split(",") if val != "j=none"]
         return vals
 
     def move_joint(
